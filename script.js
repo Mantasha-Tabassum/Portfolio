@@ -184,13 +184,12 @@ document.querySelectorAll('.skill-category, .project-card, .timeline-item').forE
     observer.observe(el);
 });
 
-// Download Resume Button
+// Download Resume Button - Works properly now
 const downloadBtn = document.querySelector('.download-btn');
 if (downloadBtn) {
     downloadBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        showNotification('Resume download started! (This is a demo)', 'success');
-        // In a real application, you would initiate an actual file download
+        // Allow the download to proceed naturally
+        showNotification('Downloading your resume...', 'success');
     });
 }
 
