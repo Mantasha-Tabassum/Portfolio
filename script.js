@@ -2,16 +2,18 @@
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
 
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
+if (hamburger && navMenu) {
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+}
 
 // Close menu when link is clicked
 document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
+        if (hamburger) hamburger.classList.remove('active');
+        if (navMenu) navMenu.classList.remove('active');
     });
 });
 
@@ -29,6 +31,11 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
+// EmailJS setup
+emailjs.init({
+    publicKey: 'rY9NGa9OW6lyPBtZJ'
+});
+
 // Typing Animation
 const typingText = document.querySelector('.typing-text');
 const textArray = [
@@ -42,22 +49,24 @@ let charIndex = 0;
 let isDeleting = false;
 
 function typeAnimation() {
+    if (!typingText) return;
+
     const currentText = textArray[textIndex];
-    
+
     if (isDeleting) {
         charIndex--;
     } else {
         charIndex++;
     }
-    
+
     typingText.textContent = currentText.substring(0, charIndex);
-    
+
     let typingSpeed = 100;
-    
+
     if (isDeleting) {
         typingSpeed = 50;
     }
-    
+
     if (!isDeleting && charIndex === currentText.length) {
         typingSpeed = 2000;
         isDeleting = true;
@@ -66,7 +75,7 @@ function typeAnimation() {
         textIndex = (textIndex + 1) % textArray.length;
         typingSpeed = 500;
     }
-    
+
     setTimeout(typeAnimation, typingSpeed);
 }
 
@@ -77,33 +86,28 @@ typeAnimation();
 const contactForm = document.getElementById('contactForm');
 
 if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        
-        // Get form values
-        const name = this.querySelector('input[placeholder="Your Name"]').value;
-        const email = this.querySelector('input[placeholder="Your Email"]').value;
-        const subject = this.querySelector('input[placeholder="Subject"]').value;
-        const message = this.querySelector('textarea').value;
-        
-        // Simple validation
-        if (name && email && subject && message) {
-            // Show success message
-            showNotification('Message sent successfully! I will get back to you soon.', 'success');
-            
-            // Clear form
-            this.reset();
-            
-            // In a real application, you would send this data to a server
-            console.log({
-                name,
-                email,
-                subject,
-                message
-            });
-        } else {
+
+        const name = this.from_name.value.trim();
+        const email = this.from_email.value.trim();
+        const subject = this.subject.value.trim();
+        const message = this.message.value.trim();
+
+        if (!name || !email || !subject || !message) {
             showNotification('Please fill in all fields.', 'error');
+            return;
         }
+
+        emailjs.sendForm('service_wh6u03r', 'template_05vfvae', this)
+            .then(() => {
+                showNotification('Message sent successfully! I will get back to you soon.', 'success');
+                this.reset();
+            })
+            .catch((error) => {
+                console.error('EmailJS error:', error);
+                showNotification('Failed to send message. Please try again.', 'error');
+            });
     });
 }
 
@@ -124,9 +128,9 @@ function showNotification(message, type) {
         z-index: 10000;
         animation: slideIn 0.3s ease-out;
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
@@ -148,7 +152,7 @@ style.textContent = `
             opacity: 1;
         }
     }
-    
+
     @keyframes slideOut {
         from {
             transform: translateX(0);
@@ -187,8 +191,7 @@ document.querySelectorAll('.skill-category, .project-card, .timeline-item').forE
 // Download Resume Button - Works properly now
 const downloadBtn = document.querySelector('.download-btn');
 if (downloadBtn) {
-    downloadBtn.addEventListener('click', (e) => {
-        // Allow the download to proceed naturally
+    downloadBtn.addEventListener('click', () => {
         showNotification('Downloading your resume...', 'success');
     });
 }
@@ -197,18 +200,18 @@ if (downloadBtn) {
 window.addEventListener('scroll', () => {
     let current = '';
     const sections = document.querySelectorAll('section');
-    
+
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.clientHeight;
-        if (pageYOffset >= sectionTop - 200) {
+        if (window.pageYOffset >= sectionTop - 200) {
             current = section.getAttribute('id');
         }
     });
-    
+
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
-        if (link.getAttribute('href').slice(1) === current) {
+        if (link.getAttribute('href') && link.getAttribute('href').slice(1) === current) {
             link.classList.add('active');
         }
     });
@@ -228,18 +231,11 @@ window.addEventListener('load', () => {
     document.body.style.opacity = '1';
 });
 
-body.style.opacity = '0';
-body.style.transition = 'opacity 0.5s ease-in';
+document.body.style.opacity = '0';
+document.body.style.transition = 'opacity 0.5s ease-in';
 
 setTimeout(() => {
     document.body.style.opacity = '1';
 }, 100);
-
-// Prevent right-click context menu (optional)
-// Uncomment if you want to protect your portfolio
-// document.addEventListener('contextmenu', (e) => {
-//     e.preventDefault();
-//     showNotification('Right-click is disabled on this page', 'error');
-// });
 
 console.log('Portfolio website loaded successfully! 🚀');
