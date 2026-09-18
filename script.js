@@ -9,7 +9,6 @@ if (hamburger && navMenu) {
     });
 }
 
-// Close menu when link is clicked
 document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
         if (hamburger) hamburger.classList.remove('active');
@@ -23,18 +22,13 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     });
 });
 
 // EmailJS setup
-emailjs.init({
-    publicKey: 'rY9NGa9OW6lyPBtZJ'
-});
+emailjs.init('rY9NGa9OW6lyPBtZJ');
 
 // Typing Animation
 const typingText = document.querySelector('.typing-text');
@@ -52,20 +46,10 @@ function typeAnimation() {
     if (!typingText) return;
 
     const currentText = textArray[textIndex];
-
-    if (isDeleting) {
-        charIndex--;
-    } else {
-        charIndex++;
-    }
-
+    charIndex += isDeleting ? -1 : 1;
     typingText.textContent = currentText.substring(0, charIndex);
 
-    let typingSpeed = 100;
-
-    if (isDeleting) {
-        typingSpeed = 50;
-    }
+    let typingSpeed = isDeleting ? 50 : 100;
 
     if (!isDeleting && charIndex === currentText.length) {
         typingSpeed = 2000;
@@ -79,10 +63,9 @@ function typeAnimation() {
     setTimeout(typeAnimation, typingSpeed);
 }
 
-// Start typing animation
 typeAnimation();
 
-// Form Submission
+// EmailJS contact form submission
 const contactForm = document.getElementById('contactForm');
 
 if (contactForm) {
@@ -91,22 +74,37 @@ if (contactForm) {
 
         const name = this.from_name.value.trim();
         const email = this.from_email.value.trim();
-        const subject = this.subject.value.trim();
+        const title = this.subject.value.trim();
         const message = this.message.value.trim();
+        const submitButton = this.querySelector('button[type="submit"]');
 
-        if (!name || !email || !subject || !message) {
+        if (!name || !email || !title || !message) {
             showNotification('Please fill in all fields.', 'error');
             return;
         }
 
-        emailjs.sendForm('service_wh6u03r', 'template_05vfvae', this)
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+
+        // These variable names match the EmailJS template shown in your screenshot:
+        // {{name}}, {{email}}, {{title}}, and {{message}}.
+        emailjs.send('service_wh6u03r', 'template_05vfvae', {
+            name,
+            email,
+            title,
+            message
+        })
             .then(() => {
                 showNotification('Message sent successfully! I will get back to you soon.', 'success');
-                this.reset();
+                contactForm.reset();
             })
             .catch((error) => {
                 console.error('EmailJS error:', error);
-                showNotification('Failed to send message. Please try again.', 'error');
+                showNotification('Message could not be sent. Please try again.', 'error');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Message';
             });
     });
 }
@@ -133,35 +131,20 @@ function showNotification(message, type) {
 
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
+        setTimeout(() => notification.remove(), 300);
     }, 3000);
 }
 
-// Add animation styles dynamically
+// Add notification animations dynamically
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
-
     @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
     }
 `;
 document.head.appendChild(style);
@@ -172,7 +155,7 @@ const observerOptions = {
     rootMargin: '0px 0px -50px 0px'
 };
 
-const observer = new IntersectionObserver(function(entries) {
+const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.style.animation = 'fadeInUp 1s ease-out';
@@ -182,13 +165,12 @@ const observer = new IntersectionObserver(function(entries) {
     });
 }, observerOptions);
 
-// Observe all cards and items
 document.querySelectorAll('.skill-category, .project-card, .timeline-item').forEach(el => {
     el.style.opacity = '0';
     observer.observe(el);
 });
 
-// Download Resume Button - Works properly now
+// Download Resume Button
 const downloadBtn = document.querySelector('.download-btn');
 if (downloadBtn) {
     downloadBtn.addEventListener('click', () => {
@@ -199,31 +181,22 @@ if (downloadBtn) {
 // Active navigation link indicator
 window.addEventListener('scroll', () => {
     let current = '';
-    const sections = document.querySelectorAll('section');
-
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.clientHeight;
-        if (window.pageYOffset >= sectionTop - 200) {
+    document.querySelectorAll('section').forEach(section => {
+        if (window.pageYOffset >= section.offsetTop - 200) {
             current = section.getAttribute('id');
         }
     });
 
     document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') && link.getAttribute('href').slice(1) === current) {
-            link.classList.add('active');
-        }
+        link.classList.toggle(
+            'active',
+            link.getAttribute('href')?.slice(1) === current
+        );
     });
 });
 
-// Add active style to nav links
 const style2 = document.createElement('style');
-style2.textContent = `
-    .nav-link.active {
-        color: var(--primary-color);
-    }
-`;
+style2.textContent = `.nav-link.active { color: var(--primary-color); }`;
 document.head.appendChild(style2);
 
 // Page Load Animation
@@ -233,7 +206,6 @@ window.addEventListener('load', () => {
 
 document.body.style.opacity = '0';
 document.body.style.transition = 'opacity 0.5s ease-in';
-
 setTimeout(() => {
     document.body.style.opacity = '1';
 }, 100);
